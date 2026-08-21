@@ -3,27 +3,32 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.session import Base
 
+class Food(Base):
+    __tablename__ = "foods"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    calories = Column(Float, nullable=False)
+    serving_size_grams = Column(Float, nullable=False)
+    carbs = Column(Float)
+    protein = Column(Float)
+    fat = Column(Float)
+
 class Meal(Base):
     __tablename__ = "meals"
-
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    status = Column(String, default="draft")  # draft, confirmed
-    meal_type = Column(String, nullable=True)  # breakfast, lunch, dinner, snack
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    user = relationship("User", back_populates="meals")
+    image_key = Column(String, nullable=True)
+
     items = relationship("MealItem", back_populates="meal")
+    user =  relationship("User", back_populates="meals")
 
 class MealItem(Base):
     __tablename__ = "meal_items"
-
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     meal_id = Column(Integer, ForeignKey("meals.id"), nullable=False)
-    food_name = Column(String, nullable=False)
-    grams = Column(Float, nullable=False)
-    calories = Column(Float, nullable=False)
-    protein = Column(Float, nullable=False)
-    carbs = Column(Float, nullable=False)
-    fat = Column(Float, nullable=False)
+    food_id = Column(Integer, ForeignKey("foods.id"), nullable=False)
+    quantity = Column(Integer, nullable=False)   # how many units of the food
 
     meal = relationship("Meal", back_populates="items")
+    food = relationship("Food")
