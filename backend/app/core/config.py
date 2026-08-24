@@ -13,6 +13,7 @@ class Settings:
     aws_secret_access_key: str = os.getenv("AWS_SECRET_ACCESS_KEY", "")
     aws_s3_bucket: str = os.getenv("AWS_S3_BUCKET", "")
     aws_region: str = os.getenv("AWS_REGION", "")
+    usda_api_key: str = os.getenv("USDA_API_KEY","")
 
 
 settings = Settings()
