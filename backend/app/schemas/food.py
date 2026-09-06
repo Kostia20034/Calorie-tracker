@@ -1,12 +1,36 @@
 from pydantic import BaseModel
-class FoodOut(BaseModel):
-  id: int
-  name : str
-  grams: float
-  callories: int
-  protein: int
-  carbs: int
-  fats: int
-  
-  class Config:
-    from_attributes = True
+
+
+class FoodDescriptionRequest(BaseModel):
+    description: str
+
+
+class FoodManualEntryRequest(BaseModel):
+    name: str
+    calories: float
+    protein: float
+    carbs: float
+    fat: float
+    serving_size_grams: float
+
+
+class FoodUpdateRequest(BaseModel):
+    name: str
+    calories: float
+    protein: float
+    carbs: float
+    fat: float
+    serving_size_grams: float
+
+
+class FoodResponse(BaseModel):
+    id: int
+    name: str
+    calories: float
+    protein: float
+    fat: float
+    carbs: float
+    serving_size_grams: float
+
+    class Config:
+        from_attributes = True  # lets Pydantic read straight from your SQLAlchemy model
