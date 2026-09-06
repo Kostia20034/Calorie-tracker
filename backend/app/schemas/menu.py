@@ -10,6 +10,11 @@ class MenuItemCreate(BaseModel):
     quantity: float = Field(gt=0)
 
 
+class MenuItemUpdate(BaseModel):
+    user_id: int
+    quantity: float = Field(gt=0)
+
+
 class MenuItemResponse(BaseModel):
     id: int
     meal_id: int
@@ -23,3 +28,17 @@ class MenuItemResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class MenuTotals(BaseModel):
+    calories: float
+    protein: float
+    carbs: float
+    fat: float
+
+
+class MenuResponse(BaseModel):
+    meal_id: int | None
+    date: date
+    items: list[MenuItemResponse]
+    totals: MenuTotals
