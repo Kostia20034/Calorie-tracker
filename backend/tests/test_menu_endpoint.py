@@ -1,9 +1,10 @@
 from datetime import date
 
 
-def test_add_food_to_menu_creates_daily_item(client):
+def test_add_food_to_menu_creates_daily_item(client, auth_headers):
     food_response = client.post(
         "/v1/api/foods/manual",
+        headers=auth_headers,
         json={
             "name": "Oats",
             "calories": 150,
@@ -17,8 +18,8 @@ def test_add_food_to_menu_creates_daily_item(client):
 
     response = client.post(
         "/v1/api/menu/items",
+        headers=auth_headers,
         json={
-            "user_id": 1,
             "date": "2026-09-06",
             "food_id": food_id,
             "quantity": 1.5,
@@ -32,11 +33,11 @@ def test_add_food_to_menu_creates_daily_item(client):
     assert response.json()["protein"] == 7.5
 
 
-def test_add_food_to_menu_returns_404_for_unknown_food(client):
+def test_add_food_to_menu_returns_404_for_unknown_food(client, auth_headers):
     response = client.post(
         "/v1/api/menu/items",
+        headers=auth_headers,
         json={
-            "user_id": 1,
             "date": date.today().isoformat(),
             "food_id": 999,
             "quantity": 1,
@@ -46,10 +47,11 @@ def test_add_food_to_menu_returns_404_for_unknown_food(client):
     assert response.status_code == 404
 
 
-def test_get_daily_menu_returns_empty_menu_for_date_without_items(client):
+def test_get_daily_menu_returns_empty_menu_for_date_without_items(client, auth_headers):
     response = client.get(
         "/v1/api/menu",
-        params={"user_id": 1, "date": "2026-09-06"},
+        headers=auth_headers,
+        params={"date": "2026-09-06"},
     )
 
     assert response.status_code == 200
@@ -61,9 +63,10 @@ def test_get_daily_menu_returns_empty_menu_for_date_without_items(client):
     }
 
 
-def test_get_daily_menu_returns_items_and_totals(client):
+def test_get_daily_menu_returns_items_and_totals(client, auth_headers):
     food_response = client.post(
         "/v1/api/foods/manual",
+        headers=auth_headers,
         json={
             "name": "Rice",
             "calories": 200,
@@ -77,8 +80,8 @@ def test_get_daily_menu_returns_items_and_totals(client):
 
     client.post(
         "/v1/api/menu/items",
+        headers=auth_headers,
         json={
-            "user_id": 1,
             "date": "2026-09-06",
             "food_id": food_id,
             "quantity": 2,
@@ -87,7 +90,8 @@ def test_get_daily_menu_returns_items_and_totals(client):
 
     response = client.get(
         "/v1/api/menu",
-        params={"user_id": 1, "date": "2026-09-06"},
+        headers=auth_headers,
+        params={"date": "2026-09-06"},
     )
 
     assert response.status_code == 200
@@ -102,9 +106,10 @@ def test_get_daily_menu_returns_items_and_totals(client):
     }
 
 
-def test_update_menu_item_changes_quantity_and_nutrition(client):
+def test_update_menu_item_changes_quantity_and_nutrition(client, auth_headers):
     food_response = client.post(
         "/v1/api/foods/manual",
+        headers=auth_headers,
         json={
             "name": "Yogurt",
             "calories": 100,
@@ -117,8 +122,8 @@ def test_update_menu_item_changes_quantity_and_nutrition(client):
     food_id = food_response.json()["id"]
     create_response = client.post(
         "/v1/api/menu/items",
+        headers=auth_headers,
         json={
-            "user_id": 1,
             "date": "2026-09-06",
             "food_id": food_id,
             "quantity": 1,
@@ -128,7 +133,8 @@ def test_update_menu_item_changes_quantity_and_nutrition(client):
 
     response = client.patch(
         f"/v1/api/menu/items/{item_id}",
-        json={"user_id": 1, "quantity": 2.5},
+        headers=auth_headers,
+        json={"quantity": 2.5},
     )
 
     assert response.status_code == 200
@@ -139,18 +145,20 @@ def test_update_menu_item_changes_quantity_and_nutrition(client):
     assert response.json()["fat"] == 5
 
 
-def test_update_menu_item_returns_404_for_unknown_or_other_user_item(client):
+def test_update_menu_item_returns_404_for_unknown_or_other_user_item(client, auth_headers):
     response = client.patch(
         "/v1/api/menu/items/999",
-        json={"user_id": 1, "quantity": 2},
+        headers=auth_headers,
+        json={"quantity": 2},
     )
 
     assert response.status_code == 404
 
 
-def test_delete_menu_item_removes_item_from_daily_menu(client):
+def test_delete_menu_item_removes_item_from_daily_menu(client, auth_headers):
     food_response = client.post(
         "/v1/api/foods/manual",
+        headers=auth_headers,
         json={
             "name": "Toast",
             "calories": 80,
@@ -162,8 +170,8 @@ def test_delete_menu_item_removes_item_from_daily_menu(client):
     )
     create_response = client.post(
         "/v1/api/menu/items",
+        headers=auth_headers,
         json={
-            "user_id": 1,
             "date": "2026-09-06",
             "food_id": food_response.json()["id"],
             "quantity": 1,
@@ -173,7 +181,7 @@ def test_delete_menu_item_removes_item_from_daily_menu(client):
 
     response = client.delete(
         f"/v1/api/menu/items/{item_id}",
-        params={"user_id": 1},
+        headers=auth_headers,
     )
 
     assert response.status_code == 200
@@ -184,7 +192,8 @@ def test_delete_menu_item_removes_item_from_daily_menu(client):
 
     menu_response = client.get(
         "/v1/api/menu",
-        params={"user_id": 1, "date": "2026-09-06"},
+        headers=auth_headers,
+        params={"date": "2026-09-06"},
     )
     assert menu_response.json()["items"] == []
     assert menu_response.json()["totals"] == {
@@ -195,10 +204,10 @@ def test_delete_menu_item_removes_item_from_daily_menu(client):
     }
 
 
-def test_delete_menu_item_returns_404_for_unknown_item(client):
+def test_delete_menu_item_returns_404_for_unknown_item(client, auth_headers):
     response = client.delete(
         "/v1/api/menu/items/999",
-        params={"user_id": 1},
+        headers=auth_headers,
     )
 
     assert response.status_code == 404

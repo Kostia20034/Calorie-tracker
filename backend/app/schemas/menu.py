@@ -4,14 +4,12 @@ from pydantic import BaseModel, Field
 
 
 class MenuItemCreate(BaseModel):
-    user_id: int
     date: date
     food_id: int
     quantity: float = Field(gt=0)
 
 
 class MenuItemUpdate(BaseModel):
-    user_id: int
     quantity: float = Field(gt=0)
 
 

@@ -2,7 +2,7 @@
 from unittest.mock import MagicMock
 
 
-def test_post_foods_from_description(client, monkeypatch):
+def test_post_foods_from_description(client, auth_headers, monkeypatch):
     fake_nutrition = {
         "name": "Apple",
         "calories": 95,
@@ -19,6 +19,7 @@ def test_post_foods_from_description(client, monkeypatch):
     response = client.post(
         "/v1/api/foods/from-description",
         json={"description": "one apple"},
+        headers=auth_headers,
     )
 
     assert response.status_code == 201
@@ -28,7 +29,7 @@ def test_post_foods_from_description(client, monkeypatch):
     assert "id" in body
 
 
-def test_post_foods_manual_entry(client):
+def test_post_foods_manual_entry(client, auth_headers):
     payload = {
         "name": "Banana",
         "calories": 105,
@@ -38,7 +39,9 @@ def test_post_foods_manual_entry(client):
         "serving_size_grams": 118,
     }
 
-    response = client.post("/v1/api/foods/manual", json=payload)
+    response = client.post(
+        "/v1/api/foods/manual", json=payload, headers=auth_headers
+    )
 
     assert response.status_code == 201
     body = response.json()
@@ -48,7 +51,7 @@ def test_post_foods_manual_entry(client):
     assert "id" in body
 
 
-def test_search_foods_by_name(client):
+def test_search_foods_by_name(client, auth_headers):
     client.post(
         "/v1/api/foods/manual",
         json={
@@ -59,16 +62,19 @@ def test_search_foods_by_name(client):
             "fat": 0.2,
             "serving_size_grams": 131,
         },
+        headers=auth_headers,
     )
 
-    response = client.get("/v1/api/foods/search", params={"name": "oran"})
+    response = client.get(
+        "/v1/api/foods/search", params={"name": "oran"}, headers=auth_headers
+    )
 
     assert response.status_code == 200
     assert len(response.json()) >= 1
     assert any(item["name"] == "Orange" for item in response.json())
 
 
-def test_update_food_by_id(client):
+def test_update_food_by_id(client, auth_headers):
     create_response = client.post(
         "/v1/api/foods/manual",
         json={
@@ -79,6 +85,7 @@ def test_update_food_by_id(client):
             "fat": 0.2,
             "serving_size_grams": 150,
         },
+        headers=auth_headers,
     )
     food_id = create_response.json()["id"]
 
@@ -92,6 +99,7 @@ def test_update_food_by_id(client):
             "fat": 0.3,
             "serving_size_grams": 170,
         },
+        headers=auth_headers,
     )
 
     assert update_response.status_code == 200
@@ -101,7 +109,7 @@ def test_update_food_by_id(client):
     assert body["name"] == "Pear"
 
 
-def test_delete_food_by_id(client):
+def test_delete_food_by_id(client, auth_headers):
     create_response = client.post(
         "/v1/api/foods/manual",
         json={
@@ -112,11 +120,20 @@ def test_delete_food_by_id(client):
             "fat": 0.2,
             "serving_size_grams": 150,
         },
+        headers=auth_headers,
     )
     food_id = create_response.json()["id"]
 
-    delete_response = client.delete(f"/v1/api/foods/{food_id}")
+    delete_response = client.delete(
+        f"/v1/api/foods/{food_id}", headers=auth_headers
+    )
 
     assert delete_response.status_code == 200
     assert delete_response.json()["message"] == "Food deleted successfully"
+
+
+def test_food_endpoints_require_authentication(client):
+    response = client.get("/v1/api/foods/search", params={"name": "apple"})
+
+    assert response.status_code == 401
 

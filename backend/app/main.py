@@ -1,5 +1,6 @@
 #from app.models import user, meal
 from fastapi import FastAPI
+from app.api.controllers.auth import router as auth_router
 from app.api.controllers.foods import router as food_router
 from app.api.controllers.menu import router as menu_router
 from app.db.session  import Base, engine
@@ -12,6 +13,7 @@ app = FastAPI(title="Calorie Tracker API")
 Base.metadata.create_all(bind=engine) #create tables
 
 app.include_router(food_router, prefix="/v1/api")
+app.include_router(auth_router, prefix="/v1/api")
 app.include_router(menu_router, prefix="/v1/api")
 
 

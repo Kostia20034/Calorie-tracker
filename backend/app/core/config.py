@@ -14,6 +14,12 @@ class Settings:
     aws_s3_bucket: str = os.getenv("AWS_S3_BUCKET", "")
     aws_region: str = os.getenv("AWS_REGION", "")
     nvidia_api_key:str = os.getenv("AI_API_KEY","")
+    auth_secret_key: str = os.getenv("AUTH_SECRET_KEY", "")
+    access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+
+    def __post_init__(self):
+        if self.environment != "development" and not self.auth_secret_key:
+            raise ValueError("AUTH_SECRET_KEY must be set outside development")
 
 
 settings = Settings()

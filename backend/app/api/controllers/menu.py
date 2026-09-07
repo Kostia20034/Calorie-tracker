@@ -3,7 +3,9 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.security import get_current_user
 from app.db.session import get_db
+from app.models.user import User
 from app.schemas.menu import (
     MenuItemCreate,
     MenuItemResponse,
@@ -22,15 +24,23 @@ router = APIRouter(prefix="/menu", tags=["menu"])
 
 
 @router.get("", response_model=MenuResponse)
-def get_menu(user_id: int, date: date, db: Session = Depends(get_db)):
-    return get_daily_menu(db, user_id=user_id, meal_date=date)
+def get_menu(
+    date: date,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return get_daily_menu(db, user_id=current_user.id, meal_date=date)
 
 
 @router.post("/items", response_model=MenuItemResponse, status_code=201)
-def add_menu_item(payload: MenuItemCreate, db: Session = Depends(get_db)):
+def add_menu_item(
+    payload: MenuItemCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     item = add_food_to_menu(
         db,
-        user_id=payload.user_id,
+        user_id=current_user.id,
         meal_date=payload.date,
         food_id=payload.food_id,
         quantity=payload.quantity,
@@ -42,12 +52,15 @@ def add_menu_item(payload: MenuItemCreate, db: Session = Depends(get_db)):
 
 @router.patch("/items/{item_id}", response_model=MenuItemResponse)
 def update_menu_item_route(
-    item_id: int, payload: MenuItemUpdate, db: Session = Depends(get_db)
+    item_id: int,
+    payload: MenuItemUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     item = update_menu_item(
         db,
         item_id=item_id,
-        user_id=payload.user_id,
+        user_id=current_user.id,
         quantity=payload.quantity,
     )
     if not item:
@@ -56,8 +69,12 @@ def update_menu_item_route(
 
 
 @router.delete("/items/{item_id}")
-def delete_menu_item_route(item_id: int, user_id: int, db: Session = Depends(get_db)):
-    deleted = delete_menu_item(db, item_id=item_id, user_id=user_id)
+def delete_menu_item_route(
+    item_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    deleted = delete_menu_item(db, item_id=item_id, user_id=current_user.id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Menu item not found")
     return {"message": "Menu item deleted successfully", "id": item_id}
