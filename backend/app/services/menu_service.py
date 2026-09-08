@@ -1,8 +1,16 @@
-from datetime import date
+from datetime import date, datetime, time
 
 from sqlalchemy.orm import Session
 
-from app.models.meal import Food, Meal, MealItem
+from app.models.meal import Food, Meal, MealCategory, MealItem
+
+
+def get_meal_category(logged_at: time) -> MealCategory:
+    if logged_at < time(12, 0):
+        return MealCategory.BREAKFAST
+    if logged_at < time(15, 0):
+        return MealCategory.LUNCH
+    return MealCategory.DINNER
 
 
 def add_food_to_menu(
@@ -25,6 +33,7 @@ def add_food_to_menu(
     item = MealItem(
         meal_id=meal.id,
         food_id=food.id,
+        category=get_meal_category(datetime.now().time()),
         quantity=quantity,
         food_name=food.name,
         calories=food.calories * quantity,

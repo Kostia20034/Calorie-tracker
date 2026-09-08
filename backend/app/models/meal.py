@@ -1,9 +1,26 @@
 from datetime import date
+from enum import Enum
 
-from sqlalchemy import Column, Date, Float, ForeignKey, Integer, String, DateTime, UniqueConstraint
+from sqlalchemy import (
+    Column,
+    Date,
+    DateTime,
+    Enum as SqlEnum,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.session import Base
+
+
+class MealCategory(str, Enum):
+    BREAKFAST = "breakfast"
+    LUNCH = "lunch"
+    DINNER = "dinner"
 
 class Food(Base):
     __tablename__ = "foods"
@@ -33,6 +50,7 @@ class MealItem(Base):
     id = Column(Integer, primary_key=True)
     meal_id = Column(Integer, ForeignKey("meals.id"), nullable=False)
     food_id = Column(Integer, ForeignKey("foods.id"), nullable=False)
+    category = Column(SqlEnum(MealCategory), nullable=False)
     quantity = Column(Float, nullable=False)
     food_name = Column(String, nullable=False)
     calories = Column(Float, nullable=False)

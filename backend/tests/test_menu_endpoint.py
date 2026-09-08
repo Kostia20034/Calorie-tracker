@@ -1,4 +1,14 @@
-from datetime import date
+from datetime import date, time
+
+from app.models.meal import MealCategory
+from app.services.menu_service import get_meal_category
+
+
+def test_get_meal_category_uses_expected_time_boundaries():
+    assert get_meal_category(time(11, 59)) == MealCategory.BREAKFAST
+    assert get_meal_category(time(12, 0)) == MealCategory.LUNCH
+    assert get_meal_category(time(14, 59)) == MealCategory.LUNCH
+    assert get_meal_category(time(15, 0)) == MealCategory.DINNER
 
 
 def test_add_food_to_menu_creates_daily_item(client, auth_headers):
@@ -28,6 +38,7 @@ def test_add_food_to_menu_creates_daily_item(client, auth_headers):
 
     assert response.status_code == 201
     assert response.json()["food_name"] == "Oats"
+    assert response.json()["category"] in {"breakfast", "lunch", "dinner"}
     assert response.json()["quantity"] == 1.5
     assert response.json()["calories"] == 225
     assert response.json()["protein"] == 7.5

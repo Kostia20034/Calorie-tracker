@@ -2,6 +2,8 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
+from app.models.meal import MealCategory
+
 
 class MenuItemCreate(BaseModel):
     date: date
@@ -17,6 +19,7 @@ class MenuItemResponse(BaseModel):
     id: int
     meal_id: int
     food_id: int
+    category: MealCategory
     quantity: float
     food_name: str
     calories: float
