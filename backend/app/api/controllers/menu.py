@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user
@@ -12,15 +12,45 @@ from app.schemas.menu import (
     MenuItemUpdate,
     MenuResponse,
 )
+from app.schemas.image_meal import ImageMealResponse
 from app.services.menu_service import (
     add_food_to_menu,
     delete_menu_item,
     get_daily_menu,
     update_menu_item,
 )
+from app.services.image_meal_service import add_image_meal_to_menu
 
 
 router = APIRouter(prefix="/menu", tags=["menu"])
+
+
+@router.post("/from-image", response_model=ImageMealResponse, status_code=201)
+async def add_image_menu(
+    date: date,
+    image: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not image.content_type or not image.content_type.startswith("image/"):
+        raise HTTPException(status_code=415, detail="Uploaded file must be an image")
+
+    image_bytes = await image.read()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded image is empty")
+
+    try:
+        return add_image_meal_to_menu(
+            db=db,
+            user_id=current_user.id,
+            meal_date=date,
+            image_bytes=image_bytes,
+            file_name=image.filename or "meal-image",
+            content_type=image.content_type,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
 
 
 @router.get("", response_model=MenuResponse)

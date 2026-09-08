@@ -46,7 +46,7 @@ def auth_headers(client):
 
     login_response = client.post(
         "/v1/api/auth/login",
-        json={"email": "test@example.com", "password": "password123"},
+        data={"username": "test@example.com", "password": "password123"},
     )
     assert login_response.status_code == 200
     token = login_response.json()["access_token"]

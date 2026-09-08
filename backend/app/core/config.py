@@ -14,6 +14,8 @@ class Settings:
     aws_s3_bucket: str = os.getenv("AWS_S3_BUCKET", "")
     aws_region: str = os.getenv("AWS_REGION", "")
     nvidia_api_key:str = os.getenv("AI_API_KEY","")
+    gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
+    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
     auth_secret_key: str = os.getenv("AUTH_SECRET_KEY", "")
     access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 

@@ -1,6 +1,7 @@
 from datetime import date, time
 
 from app.models.meal import MealCategory
+from app.schemas.image_meal import DetectedFoodResponse
 from app.services.menu_service import get_meal_category
 
 
@@ -9,6 +10,57 @@ def test_get_meal_category_uses_expected_time_boundaries():
     assert get_meal_category(time(12, 0)) == MealCategory.LUNCH
     assert get_meal_category(time(14, 59)) == MealCategory.LUNCH
     assert get_meal_category(time(15, 0)) == MealCategory.DINNER
+
+
+def test_add_food_from_image_creates_menu_items(client, auth_headers, monkeypatch):
+    monkeypatch.setattr(
+        "app.services.image_meal_service.saveFile",
+        lambda image_bytes, file_name, content_type: "meal-image-key",
+    )
+    monkeypatch.setattr(
+        "app.services.image_meal_service.analyze_food_image",
+        lambda image_bytes, content_type: DetectedFoodResponse.model_validate(
+            {
+                "items": [
+                    {
+                        "name": "Banana",
+                        "quantity": 3,
+                        "portion_description": "3 medium bananas",
+                        "estimated_calories": 105,
+                        "protein_g": 1.3,
+                        "carbs_g": 27,
+                        "fat_g": 0.4,
+                    }
+                ],
+                "total_calories": 105,
+            }
+        ),
+    )
+
+    response = client.post(
+        "/v1/api/menu/from-image",
+        headers=auth_headers,
+        params={"date": "2026-09-07"},
+        files={"image": ("banana.jpg", b"fake-image", "image/jpeg")},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["items"][0]["food_name"] == "Banana"
+    assert response.json()["items"][0]["quantity"] == 3
+    assert response.json()["items"][0]["calories"] == 105
+    assert response.json()["totals"]["calories"] == 105
+    assert response.json()["image_key"] == "meal-image-key"
+
+
+def test_add_food_from_image_rejects_non_image(client, auth_headers):
+    response = client.post(
+        "/v1/api/menu/from-image",
+        headers=auth_headers,
+        params={"date": "2026-09-07"},
+        files={"image": ("notes.txt", b"not-an-image", "text/plain")},
+    )
+
+    assert response.status_code == 415
 
 
 def test_add_food_to_menu_creates_daily_item(client, auth_headers):

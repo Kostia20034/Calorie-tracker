@@ -5,3 +5,6 @@ pytest
 requests
 PyJWT
 pwdlib[argon2]
+boto3
+google-genai
+python-multipart

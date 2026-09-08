@@ -43,7 +43,19 @@ class Meal(Base):
     image_key = Column(String, nullable=True)
 
     items = relationship("MealItem", back_populates="meal")
+    images = relationship("MealImage", back_populates="meal")
     user =  relationship("User", back_populates="meals")
+
+
+class MealImage(Base):
+    __tablename__ = "meal_images"
+
+    id = Column(Integer, primary_key=True)
+    meal_id = Column(Integer, ForeignKey("meals.id"), nullable=False)
+    s3_key = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    meal = relationship("Meal", back_populates="images")
 
 class MealItem(Base):
     __tablename__ = "meal_items"

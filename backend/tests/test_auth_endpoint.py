@@ -10,7 +10,7 @@ def test_register_login_and_get_current_user(client):
 
     login_response = client.post(
         "/v1/api/auth/login",
-        json={"email": "new@example.com", "password": "password123"},
+        data={"username": "new@example.com", "password": "password123"},
     )
 
     assert login_response.status_code == 200
@@ -43,7 +43,7 @@ def test_login_rejects_wrong_password(client):
 
     response = client.post(
         "/v1/api/auth/login",
-        json={"email": "wrong@example.com", "password": "badpassword"},
+        data={"username": "wrong@example.com", "password": "badpassword"},
     )
 
     assert response.status_code == 401
