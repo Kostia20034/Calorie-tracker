@@ -1,5 +1,6 @@
 from app.ai.nutrition_ai import get_nutrition_from_ai
 from app.models.meal import Food
+from sqlalchemy.orm import Session
 
 
 def create_food_from_description(db: Session, description: str) -> Food:
