@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user
 from app.db.session import get_db
+from app.models.meal import MealCategory
 from app.models.user import User
 from app.schemas.menu import (
     MenuItemCreate,
@@ -28,6 +29,7 @@ router = APIRouter(prefix="/menu", tags=["menu"])
 @router.post("/from-image", response_model=ImageMealResponse, status_code=201)
 async def add_image_menu(
     date: date,
+    category: MealCategory | None = None,
     image: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -47,10 +49,10 @@ async def add_image_menu(
             image_bytes=image_bytes,
             file_name=image.filename or "meal-image",
             content_type=image.content_type,
+            category=category,
         )
     except ValueError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
-
 
 
 @router.get("", response_model=MenuResponse)
@@ -74,6 +76,7 @@ def add_menu_item(
         meal_date=payload.date,
         food_id=payload.food_id,
         quantity=payload.quantity,
+        category=payload.category,
     )
     if not item:
         raise HTTPException(status_code=404, detail="Food not found")

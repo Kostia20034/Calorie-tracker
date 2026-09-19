@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Column, DateTime, Float, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -12,5 +12,9 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     password = Column(String, nullable=False)
+    calorie_goal = Column(Float, nullable=False, default=2000)
+    protein_goal = Column(Float, nullable=False, default=120)
+    carbs_goal = Column(Float, nullable=False, default=250)
+    fat_goal = Column(Float, nullable=False, default=65)
 
     meals = relationship("Meal", back_populates="user")

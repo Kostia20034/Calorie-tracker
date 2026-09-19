@@ -10,7 +10,12 @@ from app.core.security import (
 )
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.auth import RegisterRequest, TokenResponse, UserResponse
+from app.schemas.auth import (
+    GoalUpdateRequest,
+    RegisterRequest,
+    TokenResponse,
+    UserResponse,
+)
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -50,4 +55,19 @@ def login(
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@router.patch("/goals", response_model=UserResponse)
+def update_goals(
+    payload: GoalUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    current_user.calorie_goal = payload.calorie_goal
+    current_user.protein_goal = payload.protein_goal
+    current_user.carbs_goal = payload.carbs_goal
+    current_user.fat_goal = payload.fat_goal
+    db.commit()
+    db.refresh(current_user)
     return current_user

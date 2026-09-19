@@ -9,6 +9,7 @@ class MenuItemCreate(BaseModel):
     date: date
     food_id: int
     quantity: float = Field(gt=0)
+    category: MealCategory | None = None
 
 
 class MenuItemUpdate(BaseModel):

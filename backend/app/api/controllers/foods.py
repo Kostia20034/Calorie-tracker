@@ -3,7 +3,12 @@ from sqlalchemy.orm import Session
 from app.core.security import get_current_user
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.food import FoodDescriptionRequest, FoodManualEntryRequest, FoodResponse, FoodUpdateRequest
+from app.schemas.food import (
+    FoodDescriptionRequest,
+    FoodManualEntryRequest,
+    FoodResponse,
+    FoodUpdateRequest,
+)
 from app.services.food_service import (
     create_food_from_description,
     create_manual_food,
@@ -31,7 +36,10 @@ def add_food_from_description(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    food = create_food_from_description(db, payload.description)
+    try:
+        food = create_food_from_description(db, payload.description)
+    except ValueError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
     return food
 
 
@@ -68,6 +76,3 @@ def delete_food_by_id_route(
     if not deleted:
         raise HTTPException(status_code=404, detail="Food not found")
     return {"message": "Food deleted successfully", "id": food_id}
-
-
-

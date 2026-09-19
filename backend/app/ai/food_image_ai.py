@@ -11,7 +11,12 @@ def analyze_food_image(image_bytes: bytes, content_type: str) -> DetectedFoodRes
     if not settings.gemini_api_key:
         raise ValueError("GEMINI_API_KEY is not configured")
 
-    client = genai.Client(api_key=settings.gemini_api_key)
+    try:
+        client = genai.Client(api_key=settings.gemini_api_key)
+    except Exception as exc:
+        raise ValueError(
+            "Gemini is unavailable. Check the Gemini configuration."
+        ) from exc
     prompt = """Analyze this food photo. For each distinct food item visible, provide:
 - name: the food item's name
 - quantity: numeric count of items or numeric number of portions; use 1 for a shared dish portion
@@ -35,16 +40,21 @@ Return ONLY valid JSON in this exact format:
   "total_calories": number
 }"""
 
-    response = client.models.generate_content(
-        model=settings.gemini_model,
-        contents=[
-            types.Part.from_bytes(data=image_bytes, mime_type=content_type),
-            prompt,
-        ],
-        config=types.GenerateContentConfig(response_mime_type="application/json"),
-    )
+    try:
+        response = client.models.generate_content(
+            model=settings.gemini_model,
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type=content_type),
+                prompt,
+            ],
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
+        )
+    except Exception as exc:
+        raise ValueError(
+            "Gemini could not analyze this image. Try again shortly."
+        ) from exc
 
     try:
         return DetectedFoodResponse.model_validate(json.loads(response.text))
-    except (json.JSONDecodeError, TypeError, ValueError) as exc:
+    except (AttributeError, json.JSONDecodeError, TypeError, ValueError) as exc:
         raise ValueError("Gemini returned an invalid food analysis") from exc

@@ -16,6 +16,7 @@ def add_image_meal_to_menu(
     image_bytes: bytes,
     file_name: str,
     content_type: str,
+    category: MealCategory | None = None,
 ) -> dict:
     image_key = saveFile(image_bytes, file_name, content_type)
     analysis: DetectedFoodResponse = analyze_food_image(image_bytes, content_type)
@@ -33,7 +34,7 @@ def add_image_meal_to_menu(
     image = MealImage(meal_id=meal.id, s3_key=image_key)
     db.add(image)
     db.flush()
-    category = get_meal_category(datetime.now().time())
+    selected_category = category or get_meal_category(datetime.now().time())
     created_items = []
 
     for detected in analysis.items:
@@ -54,7 +55,7 @@ def add_image_meal_to_menu(
         item = MealItem(
             meal_id=meal.id,
             food_id=food.id,
-            category=category,
+            category=selected_category,
             quantity=detected.quantity,
             food_name=detected.name,
             calories=detected.estimated_calories,

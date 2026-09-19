@@ -35,6 +35,25 @@ def test_register_rejects_duplicate_email(client):
     assert response.status_code == 409
 
 
+def test_user_can_update_nutrition_goals(client, auth_headers):
+    response = client.patch(
+        "/v1/api/auth/goals",
+        headers=auth_headers,
+        json={
+            "calorie_goal": 2200,
+            "protein_goal": 150,
+            "carbs_goal": 240,
+            "fat_goal": 70,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["calorie_goal"] == 2200
+    assert response.json()["protein_goal"] == 150
+    assert response.json()["carbs_goal"] == 240
+    assert response.json()["fat_goal"] == 70
+
+
 def test_login_rejects_wrong_password(client):
     client.post(
         "/v1/api/auth/register",

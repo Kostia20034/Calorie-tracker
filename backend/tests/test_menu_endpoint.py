@@ -96,6 +96,35 @@ def test_add_food_to_menu_creates_daily_item(client, auth_headers):
     assert response.json()["protein"] == 7.5
 
 
+def test_add_food_to_menu_accepts_selected_category(client, auth_headers):
+    food_response = client.post(
+        "/v1/api/foods/manual",
+        headers=auth_headers,
+        json={
+            "name": "Toast",
+            "calories": 100,
+            "protein": 3,
+            "carbs": 18,
+            "fat": 1,
+            "serving_size_grams": 40,
+        },
+    )
+
+    response = client.post(
+        "/v1/api/menu/items",
+        headers=auth_headers,
+        json={
+            "date": "2026-09-06",
+            "food_id": food_response.json()["id"],
+            "quantity": 1,
+            "category": "breakfast",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["category"] == "breakfast"
+
+
 def test_add_food_to_menu_returns_404_for_unknown_food(client, auth_headers):
     response = client.post(
         "/v1/api/menu/items",
@@ -169,6 +198,44 @@ def test_get_daily_menu_returns_items_and_totals(client, auth_headers):
     }
 
 
+def test_get_insights_returns_seven_day_totals_and_averages(client, auth_headers):
+    food_response = client.post(
+        "/v1/api/foods/manual",
+        headers=auth_headers,
+        json={
+            "name": "Rice",
+            "calories": 200,
+            "protein": 4,
+            "carbs": 45,
+            "fat": 1,
+            "serving_size_grams": 150,
+        },
+    )
+    food_id = food_response.json()["id"]
+    client.post(
+        "/v1/api/menu/items",
+        headers=auth_headers,
+        json={"date": "2026-09-06", "food_id": food_id, "quantity": 2},
+    )
+
+    response = client.get(
+        "/v1/api/insights",
+        headers=auth_headers,
+        params={"end_date": "2026-09-06"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["start_date"] == "2026-08-31"
+    assert body["end_date"] == "2026-09-06"
+    assert body["logged_days"] == 1
+    assert body["average_calories"] == 400
+    assert body["average_protein"] == 8
+    assert body["average_carbs"] == 90
+    assert body["average_fat"] == 2
+    assert len(body["days"]) == 7
+
+
 def test_update_menu_item_changes_quantity_and_nutrition(client, auth_headers):
     food_response = client.post(
         "/v1/api/foods/manual",
@@ -208,7 +275,9 @@ def test_update_menu_item_changes_quantity_and_nutrition(client, auth_headers):
     assert response.json()["fat"] == 5
 
 
-def test_update_menu_item_returns_404_for_unknown_or_other_user_item(client, auth_headers):
+def test_update_menu_item_returns_404_for_unknown_or_other_user_item(
+    client, auth_headers
+):
     response = client.patch(
         "/v1/api/menu/items/999",
         headers=auth_headers,
